@@ -79,13 +79,16 @@ rule_data_defaults := {
 		"features.operators.openshift.io/disconnected",
 		"features.operators.openshift.io/fips-compliant",
 		"features.operators.openshift.io/proxy-aware",
-		"features.operators.openshift.io/cnf",
-		"features.operators.openshift.io/cni",
-		"features.operators.openshift.io/csi",
 		"features.operators.openshift.io/tls-profiles",
 		"features.operators.openshift.io/token-auth-aws",
 		"features.operators.openshift.io/token-auth-azure",
 		"features.operators.openshift.io/token-auth-gcp",
+	],
+	# Used in release/olm.rego
+	"optional_olm_features_annotations": [
+		"features.operators.openshift.io/cnf",
+		"features.operators.openshift.io/cni",
+		"features.operators.openshift.io/csi",
 	],
 	# Used in release/olm.rego
 	"allowed_olm_image_registry_prefixes": [

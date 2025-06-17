@@ -66,21 +66,31 @@ deny contains result if {
 # description: >-
 #   Check the feature annotations in the ClusterServiceVersion manifest of the OLM bundle. All of
 #   required feature annotations must be present and set to either the string `"true"` or the string
-#   `"false"`. The list of feature annotations can be customize via the
-#   `required_olm_features_annotations` rule data.
+#   `"false"`. Optional annotations, if present, must also be set to `"true"` or `"false"`.
+#   The list of feature annotations can be customize via the `required_olm_features_annotations` rule data.
 # custom:
 #   short_name: feature_annotations_format
-#   failure_msg: The annotation %q is either missing or has an unexpected value
+#   failure_msg: The annotation %q is either missing (if required) or has an unexpected value
 #   solution: >-
 #     Update the ClusterServiceVersion manifest of the OLM bundle to set the feature annotations
 #     to the expected value.
 #   collections:
 #   - redhat
 #
+# Validate required annotations: must exist and have correct value
 deny contains result if {
 	some manifest in _csv_manifests
 	some annotation in lib.rule_data("required_olm_features_annotations")
 	value := object.get(manifest.metadata.annotations, annotation, "")
+	not value in {"true", "false"}
+	result := lib.result_helper_with_term(rego.metadata.chain(), [annotation], annotation)
+}
+# Validate optional annotations: if present, must have correct value
+deny contains result if {
+	some manifest in _csv_manifests
+	some annotation in lib.rule_data("optional_olm_features_annotations")
+	value := object.get(manifest.metadata.annotations, annotation, "")
+	value != ""  # Only validate if present
 	not value in {"true", "false"}
 	result := lib.result_helper_with_term(rego.metadata.chain(), [annotation], annotation)
 }
@@ -470,17 +480,20 @@ _csv_manifests contains manifest if {
 	manifest.kind == "ClusterServiceVersion"
 }
 
-# Verify allowed_olm_image_registry_prefixes & required_olm_features_annotations are non-empty list of strings
+# Verify rule data entries have the correct format:
+# - required keys: must exist, be non-empty arrays of unique strings
+# - optional keys: if present, must be arrays of unique strings (can be empty)
+
 _rule_data_errors contains error if {
-	some rule_data_key in _rule_data_keys
+	some rule_data_key in _required_rule_data_keys
 	some e in j.validate_schema(
 		lib.rule_data(rule_data_key),
 		{
-			"$schema": "http://json-schema.org/draft-07/schema#",
-			"type": "array",
-			"items": {"type": "string"},
-			"uniqueItems": true,
-			"minItems": 1,
+		"$schema": "http://json-schema.org/draft-07/schema#",
+		"type": "array",
+		"items": { "type": "string" },
+		"uniqueItems": true,
+		"minItems": 1
 		},
 	)
 	error := {
@@ -489,9 +502,32 @@ _rule_data_errors contains error if {
 	}
 }
 
-_rule_data_keys := [
+_rule_data_errors contains error if {
+	some rule_data_key in _optional_rule_data_keys
+	data.rule_data[rule_data_key] != null  # Check if rule data key is defined
+	some e in j.validate_schema(
+		lib.rule_data(rule_data_key),
+		{
+		"$schema": "http://json-schema.org/draft-07/schema#",
+		"type": "array",
+		"items": { "type": "string" },
+		"uniqueItems": true
+		# no minItems here since optional
+		},
+	)
+	error := {
+		"message": sprintf("Rule data %s has unexpected format: %s", [rule_data_key, e.message]),
+		"severity": e.severity,
+	}
+}
+
+_required_rule_data_keys := [
 	"required_olm_features_annotations",
 	"allowed_olm_image_registry_prefixes",
+]
+
+_optional_rule_data_keys := [
+	"optional_olm_features_annotations",
 ]
 
 _subscriptions_errors contains error if {

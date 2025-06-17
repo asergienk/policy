@@ -168,42 +168,50 @@ test_feature_annotations_format if {
 	expected := {
 		{
 			"code": "olm.feature_annotations_format",
-			# regal ignore:line-length
-			"msg": "The annotation \"features.operators.openshift.io/disconnected\" is either missing or has an unexpected value",
+			"msg": "The annotation \"features.operators.openshift.io/disconnected\" is either missing (if required) or has an unexpected value",
 			"term": "features.operators.openshift.io/disconnected",
 		},
 		{
 			"code": "olm.feature_annotations_format",
-			# regal ignore:line-length
-			"msg": "The annotation \"features.operators.openshift.io/fips-compliant\" is either missing or has an unexpected value",
+			"msg": "The annotation \"features.operators.openshift.io/fips-compliant\" is either missing (if required) or has an unexpected value",
 			"term": "features.operators.openshift.io/fips-compliant",
 		},
 		{
 			"code": "olm.feature_annotations_format",
-			"msg": "The annotation \"features.operators.openshift.io/proxy-aware\" is either missing or has an unexpected value",
+			"msg": "The annotation \"features.operators.openshift.io/proxy-aware\" is either missing (if required) or has an unexpected value",
 			"term": "features.operators.openshift.io/proxy-aware",
 		},
 		{
 			"code": "olm.feature_annotations_format",
-			"msg": "The annotation \"features.operators.openshift.io/cnf\" is either missing or has an unexpected value",
+			"msg": "The annotation \"features.operators.openshift.io/tls-profiles\" is either missing (if required) or has an unexpected value",
+			"term": "features.operators.openshift.io/tls-profiles",
+		},
+		{
+			"code": "olm.feature_annotations_format",
+			"msg": "The annotation \"features.operators.openshift.io/cnf\" is either missing (if required) or has an unexpected value",
 			"term": "features.operators.openshift.io/cnf",
 		},
 		{
 			"code": "olm.feature_annotations_format",
-			"msg": "The annotation \"features.operators.openshift.io/cni\" is either missing or has an unexpected value",
+			"msg": "The annotation \"features.operators.openshift.io/cni\" is either missing (if required) or has an unexpected value",
 			"term": "features.operators.openshift.io/cni",
-		},
-		{
-			"code": "olm.feature_annotations_format",
-			# regal ignore:line-length
-			"msg": "The annotation \"features.operators.openshift.io/tls-profiles\" is either missing or has an unexpected value",
-			"term": "features.operators.openshift.io/tls-profiles",
 		},
 	}
 
-	lib.assert_equal_results(olm.deny, expected) with input.image.files as {"manifests/csv.yaml": bad_manifest}
+	lib.assert_equal_results(olm.deny, expected)
+		with input.image.files as {"manifests/csv.yaml": bad_manifest}
 		with input.image.config.Labels as {olm.manifestv1: "manifests/"}
 		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"]
+		with data.rule_data.required_olm_features_annotations as [
+			"features.operators.openshift.io/disconnected",
+			"features.operators.openshift.io/fips-compliant",
+			"features.operators.openshift.io/proxy-aware",
+			"features.operators.openshift.io/tls-profiles",
+		]
+		with data.rule_data.optional_olm_features_annotations as [
+			"features.operators.openshift.io/cnf",
+			"features.operators.openshift.io/cni",
+		]
 }
 
 test_feature_annotations_format_custom_rule_data if {
@@ -214,7 +222,7 @@ test_feature_annotations_format_custom_rule_data if {
 
 	expected := {{
 		"code": "olm.feature_annotations_format",
-		"msg": "The annotation \"foo\" is either missing or has an unexpected value", "term": "foo",
+		"msg": "The annotation \"foo\" is either missing (if required) or has an unexpected value", "term": "foo",
 	}}
 
 	lib.assert_equal_results(olm.deny, expected) with input.image.files as {"manifests/csv.yaml": bad_manifest}
@@ -246,12 +254,12 @@ test_required_olm_features_annotations_provided if {
 	expected := {
 		{
 			"code": "olm.feature_annotations_format",
-			"msg": "The annotation \"foo\" is either missing or has an unexpected value",
+			"msg": "The annotation \"foo\" is either missing (if required) or has an unexpected value",
 			"term": "foo",
 		},
 		{
 			"code": "olm.feature_annotations_format",
-			"msg": "The annotation '\\x01' is either missing or has an unexpected value",
+			"msg": "The annotation '\\x01' is either missing (if required) or has an unexpected value",
 			"term": 1,
 		},
 		{
