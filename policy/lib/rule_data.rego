@@ -89,6 +89,29 @@ rule_data_defaults := {
 		"registry.access.redhat.com/",
 		"registry.redhat.io/",
 	],
+	# Used in release/olm.rego
+	"allowed_olm_resource_kinds": [
+		"ClusterServiceVersion",
+		"CustomResourceDefinition",
+		"Secret",
+		"ClusterRole",
+		"ClusterRoleBinding",
+		"ConfigMap",
+		"ServiceAccount",
+		"Service",
+		"Role",
+		"RoleBinding",
+		"PrometheusRule",
+		"ServiceMonitor",
+		"PodDisruptionBudget",
+		"PriorityClass",
+		"VerticalPodAutoscaler",
+		"ConsoleYAMLSample",
+		"ConsoleQuickStart",
+		"ConsoleCLIDownload",
+		"ConsoleLink",
+		"ConsolePlugin",
+	],
 	#
 	# Used in release/hermetic_task/hermetic_task.rego
 	"required_hermetic_tasks": [

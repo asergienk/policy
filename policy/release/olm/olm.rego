@@ -358,6 +358,57 @@ deny contains result if {
 	result := lib.result_helper_with_term(rego.metadata.chain(), [input.image.ref], input.image.ref)
 }
 
+# METADATA
+# title: OLM bundle images contain only allowed resource kinds
+# description: >-
+#   Every manifest in an OLM bundle must be of an allowed resource kind,
+#   as defined by the rule data key `allowed_olm_resource_kinds`.
+# custom:
+#   short_name: allowed_resource_kinds
+#   failure_msg: The %q manifest kind is not in the list of OLM allowed resource kinds.
+#   solution: >-
+#     Remove any unsupported OLM resource kinds in the bundle manifests.
+#   collections:
+#   - redhat
+#   effective_on: 2025-10-01T00:00:00Z
+#
+deny contains result if {
+	# allowed_kinds := lib.rule_data("allowed_olm_resource_kinds")
+
+	allowed_kinds := {
+		"ClusterServiceVersion",
+		"CustomResourceDefinition",
+		"Secret",
+		"ClusterRole",
+		"ClusterRoleBinding",
+		"ConfigMap",
+		"ServiceAccount",
+		"Service",
+		"Role",
+		"RoleBinding",
+		"PrometheusRule",
+		"ServiceMonitor",
+		"PodDisruptionBudget",
+		"PriorityClass",
+		"VerticalPodAutoscaler",
+		"ConsoleYAMLSample",
+		"ConsoleQuickStart",
+		"ConsoleCLIDownload",
+		"ConsoleLink",
+		"ConsolePlugin"
+	}
+
+    some path, manifest in input.image.files
+
+    # Only consider files in the manifests directory (as defined by OLM label)
+    manifest_dir := input.image.config.Labels[manifestv1]
+    startswith(path, manifest_dir)
+
+    not allowed_kinds[manifest.kind]
+
+    result := lib.result_helper_with_term(rego.metadata.chain(), [manifest.kind], manifest.kind)
+}
+
 _name(o) := n if {
 	n := o.name
 } else := "unnamed"
